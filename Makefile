@@ -2,7 +2,7 @@
 # GitHub viewer defaults to 8, change with ?ts=4 in URL
 
 GIT_REPOSITORY= github.com/yunify/qingcloud-cloud-controller-manager
-IMG?= qingcloud/cloud-controller-manager:latest
+IMG?= zhouyc123/cloud-controller-manager:latest
 #Debug level: 0, 1, 2 (1 true, 2 use bash)
 DEBUG?= 0
 DOCKERFILE?= deploy/Dockerfile
@@ -23,13 +23,13 @@ build: bin/qingcloud-cloud-controller-manager
 
 bin/qingcloud-cloud-controller-manager:
 ifeq ($(DEBUG), 0)
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -ldflags "-w" -o bin/manager ./cmd/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -ldflags "-w" -o bin/manager ./cmd/main.go
 else
-	CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -gcflags "all=-N -l" -o bin/manager ./cmd/main.go
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -gcflags "all=-N -l" -o bin/manager ./cmd/main.go
 endif
 
 publish: test build
-	docker build -t ${IMG}  -f ${DOCKERFILE} bin/
+	docker buildx build --platform linux/arm64 -t ${IMG} -f ${DOCKERFILE} bin/ --push . 
 	@echo "updating kustomize image patch file for manager resource"
 	sed -i'' -e 's@image: .*@image: '"${IMG}"'@' config/${TARGET}/manager_image_patch.yaml
 	docker push ${IMG}
